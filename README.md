@@ -4,22 +4,36 @@
 
 Работает путём прямой модификации сжатого JSON-ресурса `typography.json` внутри бинарника приложения. Поддерживает 38 стилей типографики (чат, заголовки, моноширинный код и т.д.).
 
+## Установка
+
+Скачайте архив для вашей платформы со страницы [Releases](https://github.com/toxeh/max-messanger-font-size-patcher/releases/latest):
+
+| Платформа | Архив |
+|---|---|
+| macOS (Apple Silicon) | `max-font-patcher-darwin-arm64.tar.gz` |
+| macOS (Intel) | `max-font-patcher-darwin-amd64.tar.gz` |
+| Linux (x86_64) | `max-font-patcher-linux-amd64.tar.gz` |
+| Windows (x64) | `max-font-patcher-windows-amd64.zip` |
+
+Распакуйте архив — внутри бинарник `font-patcher-*` и скрипт-обёртка (`patch.sh` / `patch.bat`).
+
 ## Быстрый старт
 
 ### macOS
 
 ```bash
-cd mac
-./patch.sh                          # по умолчанию: size=13, стили BodyStrong + MarkdownMessageMonospace
-./patch.sh --size 14                # другой размер
-./patch.sh --style list             # список всех доступных стилей
-./patch.sh --path ~/Applications/Max.app  # нестандартный путь установки
+tar xzf max-font-patcher-darwin-*.tar.gz
+chmod +x font-patcher-darwin-* patch.sh
+./patch.sh                                    # по умолчанию: size=13
+./patch.sh --size 14                          # другой размер
+./patch.sh --style list                       # список всех доступных стилей
+./patch.sh --path ~/Applications/Max.app      # нестандартный путь установки
 ```
 
 ### Windows
 
 ```bat
-cd win
+:: Распаковать max-font-patcher-windows-amd64.zip
 patch.bat                           &:: по умолчанию: size=13
 patch.bat --size 14                 &:: другой размер
 patch.bat --style list              &:: список стилей
@@ -29,11 +43,12 @@ patch.bat --path "D:\Max"           &:: нестандартный путь
 ### Linux
 
 ```bash
-cd linux
-sudo ./patch.sh                     # по умолчанию: size=13
-sudo ./patch.sh --size 14           # другой размер
-sudo ./patch.sh --style list        # список стилей
-sudo ./patch.sh --path /opt/max     # нестандартный путь
+tar xzf max-font-patcher-linux-amd64.tar.gz
+chmod +x font-patcher-linux-amd64 patch.sh
+sudo ./patch.sh                               # по умолчанию: size=13
+sudo ./patch.sh --size 14                     # другой размер
+sudo ./patch.sh --style list                  # список стилей
+sudo ./patch.sh --path /opt/max               # нестандартный путь
 ```
 
 > **Требование:** на Linux должен быть установлен `zstd` (`sudo dnf install zstd`).
@@ -56,7 +71,7 @@ sudo ./patch.sh --path /opt/max     # нестандартный путь
 
 1. **Сканирует** бинарник в поисках сжатых потоков, содержащих `typography.json`
 2. **Декомпрессирует** найденный ресурс
-3. **Минимизирует** JSON и удаляет блок `ax5` (accessibility) для экономии места
+3. **Минимизирует** JSON для экономии места
 4. **Подставляет** новые значения `font_size` / `line_height` через regex
 5. **Сжимает обратно** и перезаписывает in-place (с проверкой, что новый блок ≤ оригинала)
 6. **Обновляет** заголовок Qt-ресурса с новым размером
@@ -84,33 +99,11 @@ Qt6 на Linux собирается с поддержкой RCC v3, которы
 
 ```bash
 # macOS (нативная сборка)
-cd mac && go build -o font-patcher-mac .
+cd mac && go build -ldflags="-s -w" -o font-patcher-mac .
 
 # Windows (кросс-компиляция)
-cd win && GOOS=windows GOARCH=amd64 go build -o font-patcher.exe .
+cd win && GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o font-patcher.exe .
 
 # Linux (кросс-компиляция)
-cd linux && GOOS=linux GOARCH=amd64 go build -o font-patcher .
-```
-
-## Структура проекта
-
-```
-font-patcher/
-├── README.md
-├── mac/
-│   ├── main.go              # Go-патчер (zlib + codesign)
-│   ├── go.mod
-│   ├── patch.sh             # Обёртка
-│   └── font-patcher-mac     # Скомпилированный бинарник
-├── win/
-│   ├── main.go              # Go-патчер (zlib, без подписи)
-│   ├── go.mod
-│   ├── patch.bat            # Обёртка (.bat)
-│   └── font-patcher.exe     # Скомпилированный бинарник
-└── linux/
-    ├── main.go              # Go-патчер (zstd, level 22)
-    ├── go.mod / go.sum
-    ├── patch.sh             # Обёртка
-    └── font-patcher         # Скомпилированный бинарник
+cd linux && GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o font-patcher .
 ```
